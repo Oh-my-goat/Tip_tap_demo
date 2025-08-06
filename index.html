@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TipTap Demo</title>
+  <!-- html2canvas for receipt download -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --accent-color: #00C8C8; /* Teal accent matching logo */
+      --text-color: #333;
+      --bg-page: #f5f5f5;
+    }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      background: var(--bg-page);
+      color: var(--text-color);
+    }
+    #app { 
+      background: #fff; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+      width: 100%; 
+      max-width: 400px; 
+      overflow: hidden; 
+    }
+    header { 
+      background: var(--accent-color); 
+      padding: 12px; 
+      text-align: center; 
+    }
+    header img { 
+      height: 60px; /* Increased logo size */
+      max-width: 90%;
+    }
+    .page { 
+      display: none; 
+      padding: 24px; 
+    }
+    .active { display: block; }
+    h1 { 
+      margin-top: 0; 
+      font-size: 1.5rem; 
+      text-align: center; 
+    }
+    .vendor-photo { 
+      width: 80px; 
+      height: 80px; 
+      border-radius: 50%; 
+      object-fit: cover; 
+      margin: 0 auto 16px; 
+      display: block; 
+    }
+    .tips { 
+      display: flex; 
+      justify-content: space-between; 
+      margin-bottom: 16px; 
+    }
+    .tips button { 
+      flex: 1; 
+      margin: 0 4px; 
+      padding: 12px; 
+      background: var(--accent-color); 
+      color: #fff; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 1rem; 
+    }
+    input[type="number"] { 
+      width: 100%; 
+      padding: 12px; 
+      margin-bottom: 16px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px; 
+    }
+    .pay-btn { 
+      width: 100%; 
+      padding: 12px; 
+      background: #007B7B; /* Slightly darker accent for button */
+      color: #fff; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 1rem; 
+    }
+    .receipt { text-align: center; }
+    .download-btn { 
+      margin-top: 16px; 
+      padding: 12px; 
+      background: var(--accent-color); 
+      color: #fff; 
+      border: none; 
+      border-radius: 4px; 
+      font-size: 1rem; 
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <!-- TipTap Logo -->
+      <img src="logo.png" alt="TipTap Logo">
+    </header>
+
+    <!-- Tip selection page -->
+    <section id="page-tip" class="page active">
+      <h1>You're about to TipTap <span id="vendor-name"></span></h1>
+      <img id="vendor-photo" class="vendor-photo" src="placeholder.png" alt="Vendor Photo">
+      <div class="tips">
+        <button data-amount="5">R5</button>
+        <button data-amount="10">R10</button>
+        <button data-amount="20">R20</button>
+      </div>
+      <input id="custom-amount" type="number" placeholder="Custom amount (R)" min="1">
+      <button id="pay-btn" class="pay-btn">Pay with Wallet</button>
+    </section>
+
+    <!-- Receipt page -->
+    <section id="page-receipt" class="page">
+      <div id="receipt-card" class="receipt">
+        <h1>Payment Complete!</h1>
+        <p>Tip of <strong>R<span id="receipt-amount"></span></strong> sent to <span id="receipt-name"></span></p>
+        <p>ID: <span id="receipt-id"></span></p>
+      </div>
+      <button id="download-btn" class="download-btn">Download Receipt</button>
+    </section>
+  </div>
+
+  <script>
+    // Sample vendor data
+    const vendors = {
+      '123': { name: 'John Smith', photo: 'john.jpg', id: '123' },
+      '456': { name: 'Jane Doe', photo: 'jane.jpg', id: '456' }
+    };
+
+    // Helper: get URL param
+    function getParam(name) {
+      const url = new URL(window.location);
+      return url.searchParams.get(name);
+    }
+
+    // Initialize vendor details
+    const vendorId = getParam('id') || '123';
+    const vendor = vendors[vendorId] || vendors['123'];
+    document.getElementById('vendor-name').textContent = vendor.name;
+    document.getElementById('vendor-photo').src = vendor.photo;
+
+    // Tip buttons logic
+    document.querySelectorAll('.tips button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('custom-amount').value = btn.dataset.amount;
+      });
+    });
+
+    // Simulate payment
+    document.getElementById('pay-btn').addEventListener('click', () => {
+      const amt = document.getElementById('custom-amount').value;
+      if (!amt || amt <= 0) return alert('Enter a valid amount');
+      document.getElementById('page-tip').classList.remove('active');
+      document.getElementById('page-receipt').classList.add('active');
+      document.getElementById('receipt-amount').textContent = amt;
+      document.getElementById('receipt-name').textContent = vendor.name;
+      document.getElementById('receipt-id').textContent = vendor.id;
+    });
+
+    // Download receipt as image
+    document.getElementById('download-btn').addEventListener('click', () => {
+      html2canvas(document.getElementById('receipt-card')).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `receipt_${vendor.id}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+  </script>
+</body>
+</html>
